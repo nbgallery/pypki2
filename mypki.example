@@ -1,0 +1,10 @@
+{
+  "pem": {
+    "cert": "/home/you/certificates/you.cert.pem",
+    "path": "/home/you/certificates/you.key.pem"
+  },
+  "p12": {
+    "path": "/home/you/certificates/you.p12"
+  },
+  "ca": "/home/you/certificates/certificate_authorities_file.pem"
+}
