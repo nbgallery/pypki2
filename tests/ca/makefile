@@ -1,7 +1,7 @@
-all: fetch root_ca_cert intermediate_cert
+all: fetch cert_chain server_cert
 
 clean:
-	rm -rf certs crl index.txt intermediate newcerts openssl.cnf private serial
+	rm -rf certs crl index.txt index.txt.attr index.txt.old intermediate newcerts openssl.cnf private serial serial.old
 
 fetch_root:
 	wget https://jamielinux.com/docs/openssl-certificate-authority/_downloads/root-config.txt
@@ -53,3 +53,19 @@ intermediate_signature_request: intermediate_key
 
 intermediate_cert: intermediate_signature_request
 	openssl ca -config openssl.cnf -extensions v3_intermediate_ca -days 100000 -notext -md sha256 -in intermediate/csr/intermediate.csr.pem -out intermediate/certs/intermediate.cert.pem
+
+cert_chain: root_ca_cert intermediate_cert
+	cat intermediate/certs/intermediate.cert.pem certs/ca.cert.pem > intermediate/certs/ca-chain.cert.pem
+
+server_key: intermediate_dirs
+	openssl genrsa -aes256 -out intermediate/private/localhost.key.pem 2048
+	chmod 400 intermediate/private/localhost.key.pem
+
+server_signature_request:  server_key
+	cp intermediate/openssl.cnf intermediate/openssl_localhost.cnf
+	sed -i -e 's/foo/localhost/' intermediate/openssl_localhost.cnf
+	openssl req -config intermediate/openssl_localhost.cnf -key intermediate/private/localhost.key.pem -new -sha256 -out intermediate/csr/localhost.csr.pem
+
+server_cert: server_signature_request intermediate_key
+	openssl ca -config intermediate/openssl.cnf -extensions server_cert -days 100000 -notext -md sha256 -in intermediate/csr/localhost.csr.pem -out intermediate/certs/localhost.cert.pem
+	chmod 444 intermediate/certs/localhost.cert.pem
