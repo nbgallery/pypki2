@@ -303,9 +303,47 @@ class _PEMLoader(object):
 
         return ret
 
+def mypki_config_path():
+    if 'MYPKI_CONFIG' in os.environ:
+        p = os.environ['MYPKI_CONFIG'].strip()
+        d = os.path.split(p)[0]
+
+        if os.path.exists(d) and os.path.isdir(d):
+            return p+os.sep+'mypki_config'
+        elif os.path.exists(d):
+            return p
+        else:
+            return None
+
+    return None
+
+def home_config_path():
+    if 'HOME' in os.environ:
+        p = os.environ['HOME']
+
+        if os.path.exists(p):
+            return p+os.sep+'.mypki'
+        else:
+            return None
+
+    return None
+
+def get_config_path():
+    p = mypki_config_path()
+
+    if p is not None:
+        return p
+
+    p = home_config_path()
+
+    if p is not None:
+        return p
+
+    raise PyPKI2Exception('Could not find MYPKI_CONFIG or HOME environment variables.  If you are on Windows, you need to add a MYPKI_CONFIG environment variable in Control Panel.  See Windows Configuration in README.md for further instructions.')
+
 class _Loader(object):
     def __init__(self):
-        self.config_path = os.environ['HOME']+os.sep+'.mypki'
+        self.config_path = get_config_path()
         self.ipython_config()
         self.config = None
         self.loader = None
