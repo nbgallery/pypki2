@@ -173,9 +173,11 @@ class _P12Loader(object):
     def new_context(self, protocol=ssl.PROTOCOL_SSLv23):
         p12 = self._load(self.filename, self.password)
         c = ssl.SSLContext(protocol)
-        with NamedTemporaryFile() as f:
-            _write_pem_with_password(p12, f, self.password)
-            c.load_cert_chain(f.name, password=self.password)
+        f = NamedTemporaryFile(delete=False)
+        _write_pem_with_password(p12, f, self.password)
+        f.close()
+        c.load_cert_chain(f.name, password=self.password)
+        os.unlink(f.name)
         return c
 
     def dump_key(self, file_obj):
