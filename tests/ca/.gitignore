@@ -1,6 +1,6 @@
+*.csr
 csr.json
 ca-key.pem
-ca.csr
 ca.pem
 user-priv-key.pem
 user-pub-key.pem
