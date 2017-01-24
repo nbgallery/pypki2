@@ -3,6 +3,7 @@
 # vim: expandtab tabstop=4 shiftwidth=4
 
 from datetime import datetime
+from functools import partial
 from getpass import getpass
 from tempfile import NamedTemporaryFile
 from time import sleep
@@ -83,6 +84,23 @@ class _Configuration(object):
 def make_date_str():
     return datetime.now().strftime('%Y%m%d%H%M%S')
 
+def confirm_password(input_function, load_function):
+    password = None
+
+    while True:
+        password = input_function()
+
+        try:
+            load_function(password)
+        except OpenSSL.crypto.Error as e:
+            print('Incorrect password for private key.  Please try again.')
+            continue
+        else:
+            print('Successfully loaded private key.')
+            break
+
+    return password
+
 def get_password(filename):
     if sys.version_info.major == 3:
         return bytes(getpass('PKI password for {0}: '.format(filename)), encoding='utf-8')
@@ -92,6 +110,8 @@ def get_password(filename):
         raise PyPKI2Exception('Unknown version of Python.')
 
 def get_cert_path(prompt):
+    path = None
+
     while True:
         if sys.version_info.major == 3:
             path = input(prompt)
@@ -157,13 +177,19 @@ class _P12Loader(object):
         # .p12 file info already in .mypki
         if self.config.has('p12') and 'path' in self.config.get('p12') and _openssl_support:
             self.filename = self.config.get('p12')['path']
-            self.password = get_password(self.filename)
+
+            input_func = partial(get_password, self.filename)
+            load_func = partial(self._load, self.filename)
+            self.password = confirm_password(input_func, load_func)
             self.complete = True
 
         # no .p12 info in .mypki
         elif _openssl_support:
             self.filename = get_cert_path('Path to your .p12 digital signature (DS) file: ')
-            self.password = get_password(self.filename)
+
+            input_func = partial(get_password, self.filename)
+            load_func = partial(self._load, self.filename)
+            self.password = confirm_password(input_func, load_func)
             self.config.set('p12', { 'path': self.filename })
             self.complete = True
 
@@ -206,13 +232,19 @@ class _PEMLoader(object):
         # .pem info in .mypki
         if self.config.has('pem') and 'path' in self.config.get('pem'):
             self.filename = self._combine_pem_files(self.config.get('pem'))
-            self.password = get_password(self.config.get('pem')['path'])
+
+            input_func = partial(get_password, self.filename)
+            load_func = partial(self._load, self.filename)
+            self.password = confirm_password(input_func, load_func)
             self.complete = True
 
         # no .pem info in .mypki
         else:
             self.filename = self._combine_pem_files(self._get_pem_paths())
-            self.password = get_password(self.filename)
+
+            input_func = partial(get_password, self.filename)
+            load_func = partial(self._load, self.filename)
+            self.password = confirm_password(input_func, load_func)
             self.config.set('pem', { 'path': self.filename })
             self.complete = True
 
