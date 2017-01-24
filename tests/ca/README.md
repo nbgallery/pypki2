@@ -1,4 +1,8 @@
-Used instructions from https://jamielinux.com/docs/openssl-certificate-authority/create-the-root-pair.html to generate certificates for these tests.  Note that the root certificate is right here for all to see, which would be a huge no no in practice.
+Make sure you have cfssl installed in order to generate the test certs:
 
-Root certificate password = asdf
-Intermediate certificate password = qwerty
+https://github.com/cloudflare/cfssl/blob/master/BUILDING.md
+
+Running ```make``` will generate a self-signed root certificate authority (CA), based on these instructions:
+
+https://github.com/cloudflare/cfssl#generating-certificate-signing-request-and-private-key
+https://github.com/cloudflare/cfssl#generating-self-signed-root-ca-certificate-and-private-key

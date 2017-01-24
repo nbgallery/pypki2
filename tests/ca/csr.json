@@ -1,0 +1,18 @@
+{
+  "hosts": [
+    "HOSTNAME"
+  ],
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Denver",
+      "O": "nbgallery",
+      "OU": "WWW",
+      "ST": "Colorado"
+    }
+  ]
+}
