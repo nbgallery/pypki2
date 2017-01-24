@@ -388,6 +388,7 @@ class _Loader(object):
     def new_context(self, protocol=ssl.PROTOCOL_SSLv23):
         self.prepare_loader()
         c = self.loader.new_context(protocol=protocol)
+        c.verify_mode = ssl.CERT_REQUIRED
         ca_filename = self.ca_loader.filename.strip()
 
         if len(ca_filename) == 0:
