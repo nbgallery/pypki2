@@ -4,3 +4,5 @@ ca-key.pem
 ca.pem
 user-priv-key.pem
 user-pub-key.pem
+server-priv-key.pem
+server-pub-key.pem
