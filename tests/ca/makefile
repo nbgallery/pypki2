@@ -15,3 +15,6 @@ usercsr: key
 
 signuser: usercsr
 	cfssl sign -ca ca.pem -ca-key ca-key.pem user.csr | cfssljson -bare user-pub-key
+
+clean:
+	rm ca.csr ca-key.pem ca.pem csr.json user.csr user-priv-key.pem user-pub-key.csr user-pub-key.pem
