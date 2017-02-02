@@ -167,6 +167,14 @@ class _CALoader(object):
 
         self.complete = True
 
+def _load_p12(filename, password):
+    if _openssl_support:
+        with open(filename, 'rb') as f:
+            p12 = OpenSSL.crypto.load_pkcs12(f.read(), password)
+        return p12
+    else:
+        raise PyPKI2Exception('OpenSSL package not available.  Cannot load .p12 file.')
+
 class _P12Loader(object):
     def __init__(self, config):
         self.config = config
@@ -179,7 +187,7 @@ class _P12Loader(object):
             self.filename = self.config.get('p12')['path']
 
             input_func = partial(get_password, self.filename)
-            load_func = partial(self._load, self.filename)
+            load_func = partial(_load_p12, self.filename)
             self.password = confirm_password(input_func, load_func)
             self.complete = True
 
@@ -188,7 +196,7 @@ class _P12Loader(object):
             self.filename = get_cert_path('Path to your .p12 digital signature (DS) file: ')
 
             input_func = partial(get_password, self.filename)
-            load_func = partial(self._load, self.filename)
+            load_func = partial(_load_p12, self.filename)
             self.password = confirm_password(input_func, load_func)
             self.config.set('p12', { 'path': self.filename })
             self.complete = True
@@ -197,7 +205,7 @@ class _P12Loader(object):
             self.complete = False
 
     def new_context(self, protocol=ssl.PROTOCOL_SSLv23):
-        p12 = self._load(self.filename, self.password)
+        p12 = _load_p12(self.filename, self.password)
         c = ssl.SSLContext(protocol)
         f = NamedTemporaryFile(delete=False)
         _write_pem_with_password(p12, f, self.password)
@@ -208,19 +216,18 @@ class _P12Loader(object):
 
     def dump_key(self, file_obj):
         if _openssl_support:
-            p12 = self._load(self.filename, self.password)
+            p12 = _load_p12(self.filename, self.password)
             _write_temp_pem(p12, file_obj)
         else:
             raise PyPKI2Exception('OpenSSL package not available.  Cannot create temporary PKI file.')
 
-    def _load(self, filename, password):
-        if _openssl_support:
-            with open(filename, 'rb') as f:
-                p12 = OpenSSL.crypto.load_pkcs12(f.read(), password)
-            return p12
-        else:
-            raise PyPKI2Exception('OpenSSL package not available.  Cannot load .p12 file.')
-
+def _load_pem(filename, password):
+    if _openssl_support:
+        with open(filename, 'rb') as f:
+            pem = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, f.read(), password)
+        return pem
+    else:
+        raise PyPKI2Exception('OpenSSL package not available.  Cannot load .pem file.')
 
 class _PEMLoader(object):
     def __init__(self, config):
@@ -234,7 +241,7 @@ class _PEMLoader(object):
             self.filename = self._combine_pem_files(self.config.get('pem'))
 
             input_func = partial(get_password, self.filename)
-            load_func = partial(self._load, self.filename)
+            load_func = partial(_load_pem, self.filename)
             self.password = confirm_password(input_func, load_func)
             self.complete = True
 
@@ -243,7 +250,7 @@ class _PEMLoader(object):
             self.filename = self._combine_pem_files(self._get_pem_paths())
 
             input_func = partial(get_password, self.filename)
-            load_func = partial(self._load, self.filename)
+            load_func = partial(_load_pem, self.filename)
             self.password = confirm_password(input_func, load_func)
             self.config.set('pem', { 'path': self.filename })
             self.complete = True
@@ -255,18 +262,10 @@ class _PEMLoader(object):
 
     def dump_key(self, file_obj):
         if _openssl_support:
-            pem = self._load(self.filename, self.password)
+            pem = _load_pem(self.filename, self.password)
             _write_temp_pem(pem, file_obj)
         else:
             raise PyPKI2Exception('OpenSSL package not available.  Cannot create temporary PKI file.')
-
-    def _load(self, filename, password):
-        if _openssl_support:
-            with open(filename, 'rb') as f:
-                pem = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, f.read(), password)
-            return pem
-        else:
-            raise PyPKI2Exception('OpenSSL package not available.  Cannot load .pem file.')
 
     def _combine_pem_files(self, path_info):
         if 'path' in path_info and 'cert' not in path_info:

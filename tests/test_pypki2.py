@@ -2,6 +2,8 @@
 
 # vim: expandtab tabstop=4 shiftwidth=4
 
+from functools import partial
+
 import unittest
 import pypki2
 import sys
@@ -22,3 +24,10 @@ class GitHubTest(unittest.TestCase):
         resp = urlopen('https://github.com/nbgallery/pypki2.git')
         d = bin_to_utf8(resp.read())
         print(d)
+
+class UserCertTest(unittest.TestCase):
+    def test_good_pem_password(self):
+        cert_path = 'tests/ca/user-priv-key.pem'
+        input_func = lambda: 'userpass'
+        load_func = partial(pypki2._load, cert_path)
+        self.assert_equal(confirm_password(input_func, load_func), 'userpass')
