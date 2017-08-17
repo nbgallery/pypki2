@@ -84,20 +84,38 @@ class _Configuration(object):
 def make_date_str():
     return datetime.now().strftime('%Y%m%d%H%M%S')
 
+def password_is_good(load_function, password):
+    try:
+        load_function(password)
+    except OpenSSL.crypto.Error as e:
+        return False
+
+    return True
+
+def blank_password():
+    if sys.version_info.major == 3:
+        return bytes('', encoding='utf-8')
+    elif sys.version_info.major == 2:
+        return ''
+    else:
+        raise PyPKI2Exception('Unknown version of Python.')
+
 def confirm_password(input_function, load_function):
-    password = None
+    # see if we even need a password before prompting
+    password = blank_password()
+
+    if password_is_good(load_function, password):
+        return password
 
     while True:
         password = input_function()
 
-        try:
-            load_function(password)
-        except OpenSSL.crypto.Error as e:
-            print('Incorrect password for private key.  Please try again.')
-            continue
-        else:
+        if password_is_good(load_function, password):
             print('Successfully loaded private key.')
             break
+        else:
+            print('Incorrect password for private key.  Please try again.')
+            continue
 
     return password
 
