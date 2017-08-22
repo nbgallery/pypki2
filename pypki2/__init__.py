@@ -48,6 +48,12 @@ except ImportError:
     _ipython_support = False
     _in_ipython = False
 
+def input23(prompt):
+    if sys.version_info.major == 3:
+        return input(prompt)
+    elif sys.version_info.major == 2:
+        return raw_input(prompt)
+
 class _Configuration(object):
     def __init__(self, filename=None):
         self.config = {}
@@ -131,10 +137,7 @@ def get_cert_path(prompt):
     path = None
 
     while True:
-        if sys.version_info.major == 3:
-            path = input(prompt)
-        elif sys.version_info.major == 2:
-            path = raw_input(prompt)
+        path = input23(prompt).strip()
 
         if os.path.exists(path):
             break
@@ -173,17 +176,25 @@ def _write_pem(pkey, file_obj, password=None):
 
 class _CALoader(object):
     def __init__(self, config):
+        self.name = 'PEM Certificate Authority'
         self.config = config
         self.filename = None
-        self.complete = False
+        self.ready = False
 
+    def is_configured(self):
         if self.config.has('ca') and len(self.config.get('ca')) > 0 and os.path.exists(self.config.get('ca')):
+            return True
+
+        return False
+
+    def configure(self):
+        if self.is_configured():
             self.filename = self.config.get('ca')
         else:
             self.filename = get_cert_path('Path to your certificate authority (CA) file: ')
             self.config.set('ca', self.filename)
 
-        self.complete = True
+        self.ready = True
 
 def _load_p12(filename, password):
     if _openssl_support:
@@ -195,19 +206,27 @@ def _load_p12(filename, password):
 
 class _P12Loader(object):
     def __init__(self, config):
+        self.name = 'PKCS12'
         self.config = config
         self.filename = None
         self.password = None
-        self.complete = False
+        self.ready = False
 
+    def is_configured(self):
         # .p12 file info already in .mypki
         if self.config.has('p12') and 'path' in self.config.get('p12') and _openssl_support:
+            return True
+
+        return False
+
+    def configure(self):
+        if self.is_configured():
             self.filename = self.config.get('p12')['path']
 
             input_func = partial(get_password, self.filename)
             load_func = partial(_load_p12, self.filename)
             self.password = confirm_password(input_func, load_func)
-            self.complete = True
+            self.ready = True
 
         # no .p12 info in .mypki
         elif _openssl_support:
@@ -217,10 +236,10 @@ class _P12Loader(object):
             load_func = partial(_load_p12, self.filename)
             self.password = confirm_password(input_func, load_func)
             self.config.set('p12', { 'path': self.filename })
-            self.complete = True
+            self.ready = True
 
         else:
-            self.complete = False
+            self.ready = False
 
     def new_context(self, protocol=ssl.PROTOCOL_SSLv23):
         p12 = _load_p12(self.filename, self.password)
@@ -249,19 +268,27 @@ def _load_pem(filename, password):
 
 class _PEMLoader(object):
     def __init__(self, config):
+        self.name = 'PEM'
         self.config = config
         self.filename = None
         self.password = None
-        self.complete = False
+        self.ready = False
 
+    def is_configured(self):
         # .pem info in .mypki
         if self.config.has('pem') and 'path' in self.config.get('pem'):
+            return True
+
+        return False
+
+    def configure(self):
+        if self.is_configured():
             self.filename = self._combine_pem_files(self.config.get('pem'))
 
             input_func = partial(get_password, self.filename)
             load_func = partial(_load_pem, self.filename)
             self.password = confirm_password(input_func, load_func)
-            self.complete = True
+            self.ready = True
 
         # no .pem info in .mypki
         else:
@@ -271,7 +298,7 @@ class _PEMLoader(object):
             load_func = partial(_load_pem, self.filename)
             self.password = confirm_password(input_func, load_func)
             self.config.set('pem', { 'path': self.filename })
-            self.complete = True
+            self.ready = True
 
     def new_context(self, protocol=ssl.PROTOCOL_SSLv23):
         c = ssl.SSLContext(protocol)
@@ -392,6 +419,26 @@ def get_config_path():
 
     raise PyPKI2Exception('Could not find MYPKI_CONFIG or HOME environment variables.  If you are on Windows, you need to add a MYPKI_CONFIG environment variable in Control Panel.  See Windows Configuration in README.md for further instructions.')
 
+def pick_loader(loaders):
+    options = { str(i+1):loaders[i] for i in range(len(loaders)) }
+    selected = None
+
+    while selected is None:
+        print('Available PKI loaders are:')
+
+        for k in sorted(list(options.keys())):
+            print('{0}) {1}'.format(k, options[k].name))
+
+        num = input23('Enter the number of the loader you would like to use: ').strip()
+
+        if num in options:
+            selected = options[k]
+        else:
+            print('Invalid selection...')
+            selection = None
+
+    return selected
+
 class _Loader(object):
     def __init__(self):
         self.config_path = get_config_path()
@@ -419,19 +466,21 @@ class _Loader(object):
     def prepare_loader(self):
         if self.loader is None:
             self.config = _Configuration(self.config_path)
-            loaders = [ _P12Loader, _PEMLoader ]
+            loaders = [ _P12Loader(self.config), _PEMLoader(self.config) ]
+            configured_loaders = [ loader for loader in loaders if loader.is_configured() ]
 
-            for loader in loaders:
-                evaluated_loader = loader(self.config)
+            if len(configured_loaders) == 0:
+                self.loader = pick_loader(loaders)
+            elif len(configured_loaders) > 0:
+                self.loader = loaders[0]
+            else:
+                raise PyPKI2Exception('No configured PKI loader available.')
 
-                if evaluated_loader.complete:
-                    self.loader = evaluated_loader
-                    break
-
-            if self.loader is None:
-                raise PyPKI2Exception('None of the PKI loaders succeeded.')
+            self.loader.configure()
 
             self.ca_loader = _CALoader(self.config)
+            self.ca_loader.configure()
+
             self.config.store(self.config_path)
 
     def new_context(self, protocol=ssl.PROTOCOL_SSLv23):
