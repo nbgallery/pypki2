@@ -424,15 +424,15 @@ def pick_loader(loaders):
     selected = None
 
     while selected is None:
-        print('Available PKI loaders are:')
+        print('Available PKI configuration loaders are:')
 
         for k in sorted(list(options.keys())):
             print('{0}) {1}'.format(k, options[k].name))
 
-        num = input23('Enter the number of the loader you would like to use: ').strip()
+        num = input23('Which type of PKI do you want to configure: ').strip()
 
         if num in options:
-            selected = options[k]
+            selected = options[num]
         else:
             print('Invalid selection...')
             selection = None
