@@ -3,7 +3,7 @@ from setuptools import setup
 # vim: expandtab tabstop=4 shiftwidth=4
 
 setup(
-    version='0.7.2',
+    version='0.8.0',
     name='pypki2',
     description='More user-friendly way to access PKI-enabled services',
     url='https://github.com/nbgallery/pypki2',
@@ -14,6 +14,6 @@ setup(
     package_data={},
     python_requires='>=2.7.9, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
     install_requires=['pyOpenSSL'],
-    download_url='https://github.com/nbgallery/pypki2/archive/0.7.2.tar.gz',
+    download_url='https://github.com/nbgallery/pypki2/archive/0.8.0.tar.gz',
     keywords=['pki','ssl','pem','pkcs12','p12']
 )
