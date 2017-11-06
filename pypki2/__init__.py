@@ -472,7 +472,7 @@ class _Loader(object):
             if len(configured_loaders) == 0:
                 self.loader = pick_loader(loaders)
             elif len(configured_loaders) > 0:
-                self.loader = loaders[0]
+                self.loader = configured_loaders[0]
             else:
                 raise PyPKI2Exception('No configured PKI loader available.')
 
