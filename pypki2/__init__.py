@@ -48,6 +48,11 @@ except ImportError:
     _ipython_support = False
     _in_ipython = False
 
+if 'NBGALLERY_CLIENT_VERSION' in os.environ:
+    _in_nbgallery = True
+else:
+    _in_nbgallery = False
+
 def input23(prompt):
     if sys.version_info.major == 3:
         return input(prompt)
@@ -452,7 +457,7 @@ class _Loader(object):
         if temp_config.has('p12') and 'path' in temp_config.get('p12'):
             pass
         else:
-            if _in_ipython:
+            if _in_ipython and _in_nbgallery:
                 from IPython.display import display, Javascript
                 display(Javascript("MyPKI.init({'no_verify':true, configure:true});"))
                 print('Configuring .mypki via JavaScript .p12 dialog...')
