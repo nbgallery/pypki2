@@ -14,6 +14,5 @@ setup(
     package_data={},
     python_requires='>=2.7.9, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
     install_requires=['pyOpenSSL'],
-    download_url='https://github.com/nbgallery/pypki2/archive/0.8.0.tar.gz',
     keywords=['pki','ssl','pem','pkcs12','p12']
 )
