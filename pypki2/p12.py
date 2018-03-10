@@ -1,9 +1,11 @@
 # vim: expandtab tabstop=4 shiftwidth=4
 
 from .exceptions import PyPKI2Exception
-from .utils import confirm_password, get_password
+from .utils import confirm_password, get_cert_path, get_password
 
 from functools import partial
+
+import os
 
 try:
     import ssl

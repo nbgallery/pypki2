@@ -76,3 +76,17 @@ def get_password(filename):
         return getpass('PKI password for {0}: '.format(filename))
     else:
         raise PyPKI2Exception('Unknown version of Python.')
+
+def get_cert_path(prompt):
+    path = None
+
+    while True:
+        path = input23(prompt).strip()
+
+        if os.path.exists(path):
+            break
+        else:
+            print('Path {0} does not exist.  Please try again.'.format(path))
+            continue
+
+    return path

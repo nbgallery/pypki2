@@ -20,3 +20,5 @@ def dump_key(fobj):
 
 def ca_path():
     return _pypki_loader.ca_path()
+
+patch()
