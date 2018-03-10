@@ -1,9 +1,11 @@
 # vim: expandtab tabstop=4 shiftwidth=4
 
 from .exceptions import PyPKI2Exception
+from .pem import _write_pem_with_password, _write_temp_pem
 from .utils import confirm_password, get_cert_path, get_password
 
 from functools import partial
+from tempfile import NamedTemporaryFile
 
 import os
 
@@ -14,7 +16,7 @@ except ImportError:
 
 import OpenSSL.crypto
 
-def load_p12(filename, password):
+def _load_p12(filename, password):
     with open(filename, 'rb') as f:
         p12 = OpenSSL.crypto.load_pkcs12(f.read(), password)
     return p12
