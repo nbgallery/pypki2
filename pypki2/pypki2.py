@@ -27,22 +27,24 @@ elif sys.version_info.major == 2:
 else:
     raise Exception('Error getting original HTTPSConnection constructor.  Unexpected Python version {0}'.format(sys.version_info.major))
     
+def make_new_init(loader):
+    def _new_init(self, *args, **kwargs):
+        protocol = ssl.PROTOCOL_SSLv23
 
-def _new_init(self, *args, **kwargs):
-    protocol = ssl.PROTOCOL_SSLv23
+        if 'context' in kwargs and kwargs['context'] is not None:
+            ctx = kwargs['context']
+            protocol = ctx.protocol
 
-    if 'context' in kwargs and kwargs['context'] is not None:
-        ctx = kwargs['context']
-        protocol = ctx.protocol
+        kwargs['key_file'] = None
+        kwargs['cert_file'] = None
+        kwargs['context'] = loader.new_context(protocol=protocol)
+        _orig_HTTPSConnection_init(self, *args, **kwargs)
 
-    kwargs['key_file'] = None
-    kwargs['cert_file'] = None
-    kwargs['context'] = _pypki_loader.new_context(protocol=protocol)
-    _orig_HTTPSConnection_init(self, *args, **kwargs)
+    return _new_init
 
-def is_patched():
+def _is_patched(new_init):
     if sys.version_info.major == 3:
-        if http.client.HTTPSConnection.__init__ == _new_init:
+        if http.client.HTTPSConnection.__init__ == new_init:
             return True
         elif http.client.HTTPSConnection.__init__ == _orig_HTTPSConnection_init:
             return False
@@ -50,7 +52,7 @@ def is_patched():
             raise Exception('Error: pypki2 is not patched or unpatched')
 
     elif sys.version_info.major == 2:
-        if httplib.HTTPSConnection.__init__ == _new_init:
+        if httplib.HTTPSConnection.__init__ == new_init:
             return True
         elif httplib.HTTPSConnection.__init__ == _orig_HTTPSConnection_init:
             return False
@@ -59,24 +61,24 @@ def is_patched():
     else:
         raise Exception('Error determining pypki2 patch status.  Unexpected Python version {0}'.format(sys.version_info.major))
 
-def patch():
+def _patch(new_init):
     if sys.version_info.major == 3:
-        if not is_patched():
-            http.client.HTTPSConnection.__init__ = _new_init
+        if not _is_patched(new_init):
+            http.client.HTTPSConnection.__init__ = new_init
 
     elif sys.version_info.major == 2:
-        if not is_patched():
-            httplib.HTTPSConnection.__init__ = _new_init
+        if not _is_patched(new_init):
+            httplib.HTTPSConnection.__init__ = new_init
     else:
         raise Exception('Error replacing HTTPSConnection constructor.  Unexpected Python version {0}'.format(sys.version_info.major))
 
-def unpatch():
+def _unpatch(new_init):
     if sys.version_info.major == 3:
-        if is_patched():
+        if _is_patched(new_init):
             http.client.HTTPSConnection.__init__ = _orig_HTTPSConnection_init
 
     elif sys.version_info.major == 2:
-        if is_patched():
+        if _is_patched(new_init):
             httplib.HTTPSConnection.__init__ = _orig_HTTPSConnection_init
     else:
         raise Exception('Error replacing HTTPSConnection constructor.  Unexpected Python version {0}'.format(sys.version_info.major))

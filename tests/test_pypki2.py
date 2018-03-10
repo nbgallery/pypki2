@@ -27,26 +27,26 @@ class GitHubTest(unittest.TestCase):
 
 class PatchTest(unittest.TestCase):
     def test_patch_unpatch_patch(self):
-        pypki2.pypki2.patch()
-        self.assertTrue(pypki2.pypki2.is_patched())
+        pypki2.patch()
+        self.assertTrue(pypki2.is_patched())
 
-        pypki2.pypki2.unpatch()
-        self.assertFalse(pypki2.pypki2.is_patched())
+        pypki2.unpatch()
+        self.assertFalse(pypki2.is_patched())
 
-        pypki2.pypki2.patch()
-        self.assertTrue(pypki2.pypki2.is_patched())
+        pypki2.patch()
+        self.assertTrue(pypki2.is_patched())
 
     def test_unpatch_patch_unpatch(self):
-        pypki2.pypki2.unpatch()
-        self.assertFalse(pypki2.pypki2.is_patched())
+        pypki2.unpatch()
+        self.assertFalse(pypki2.is_patched())
 
-        pypki2.pypki2.patch()
-        self.assertTrue(pypki2.pypki2.is_patched())
+        pypki2.patch()
+        self.assertTrue(pypki2.is_patched())
 
-        pypki2.pypki2.unpatch()
-        self.assertFalse(pypki2.pypki2.is_patched())
+        pypki2.unpatch()
+        self.assertFalse(pypki2.is_patched())
 
-        pypki2.pypki2.patch() # turn patching on for final tests
+        pypki2.patch() # turn patching on for final tests
 
 class UserCertTest(unittest.TestCase):
     def test_good_pem_password(self):
