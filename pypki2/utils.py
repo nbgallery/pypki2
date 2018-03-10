@@ -2,6 +2,7 @@
 
 from .exceptions import PyPKI2Exception
 
+from datetime import datetime
 from getpass import getpass
 
 import OpenSSL.crypto
@@ -33,6 +34,9 @@ def in_ipython():
         return False
 
     return False
+
+def make_date_str():
+    return datetime.now().strftime('%Y%m%d%H%M%S')
 
 def password_is_good(load_function, password):
     try:

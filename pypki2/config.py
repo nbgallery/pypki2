@@ -2,7 +2,7 @@
 
 from .exceptions import PyPKI2Exception
 from .p12 import P12Loader
-from .pem import PEMLoader
+from .pem import CALoader, PEMLoader
 from .utils import in_ipython, in_nbgallery, input23
 
 from time import sleep
@@ -146,7 +146,7 @@ class Loader(object):
 
             self.loader.configure()
 
-            self.ca_loader = _CALoader(self.config)
+            self.ca_loader = CALoader(self.config)
             self.ca_loader.configure()
 
             self.config.store(self.config_path)
