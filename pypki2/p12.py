@@ -56,3 +56,11 @@ class P12Loader(object):
         c = ssl.SSLContext(protocol)
         f = NamedTemporaryFile(delete=False)
         _write_pem_with_password(p12, f, self.password)
+        f.close()
+        c.load_cert_chain(f.name, password=self.password)
+        os.unlink(f.name)
+        return c
+
+    def dump_key(self, file_obj):
+        p12 = _load_p12(self.filename, self.password)
+        _write_temp_pem(p12, file_obj)

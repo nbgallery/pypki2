@@ -103,3 +103,73 @@ class PEMLoader(object):
 
     def dump_key(self, file_obj):
         pem = _load_pem(self.filename, self.password)
+        _write_temp_pem(pem, file_obj)
+
+    def _combine_pem_files(self, path_info):
+        if 'path' in path_info and 'cert' not in path_info:
+            return path_info['path']
+        elif 'path' in path_info and 'cert' in path_info:
+            key_name = path_info['path']
+            cert_name = path_info['cert']
+            base_name = os.path.splitext(path_info['path'])[0]
+            new_name = base_name + make_date_str() + '.pem'
+
+            with open(new_name, 'wb') as n, open(key_name, 'rb') as k, open(cert_name, 'rb') as c:
+                key_data = k.read()
+                cert_data = c.read()
+                n.write(key_data)
+
+                if sys.version_info.major == 3:
+                    n.write(bytes('\n', encoding='utf-8'))
+                elif sys.version_info.major == 2:
+                    n.write('\n')
+
+                n.write(cert_data)
+
+            return new_name
+
+    def _get_pem_paths(self):
+        keyFile = get_cert_path('Path to your .pem digital signature (DS) key file: ')
+        keyData = self._extract_pem_key(keyFile)
+        certData = self._extract_pem_cert(keyFile)
+        info = { 'path': keyFile }
+
+        if certData is None:
+            certFile = get_cert_path('Path to your .pem digital signature (DS) certificate file: ')
+            info['cert'] = certFile
+
+        return info
+
+    def _extract_pem_cert(self, filename):
+        return self._extract_pem(filename, 'Bag Attributes', '-----END CERTIFICATE-----')
+
+    def _extract_pem_key(self, filename):
+        return self._extract_pem(filename, 'Bag Attributes', '-----END ENCRYPTED PRIVATE KEY-----')
+
+    def _extract_pem(self, filename, beginStr, endStr):
+        ret = None
+
+        with open(filename, 'r') as f:
+            lines = list(f.readlines())
+            begin = None
+            end = None
+
+            for i, x in enumerate(lines):
+                if endStr in x:
+                    end = i
+                    break
+
+            if end is not None:
+                for i in range(end, -1, -1):
+                    if beginStr in lines[i]:
+                        begin = i
+                        break
+
+                if begin is not None:
+                    ret = ''.join(lines[begin:end+1])
+                else:
+                    ret = None
+            else:
+                ret = None
+
+        return ret

@@ -7,6 +7,11 @@ from .utils import in_ipython, in_nbgallery, input23
 
 from time import sleep
 
+try:
+    import ssl
+except ImportError:
+    raise PyPKI2Exception('Cannot use pypki2.  This instance of Python was not compiled with SSL support.  Try installing openssl-devel and recompiling.')
+
 import json
 import os
 
@@ -132,3 +137,39 @@ class Loader(object):
             loaders = [ P12Loader(self.config), PEMLoader(self.config) ]
             configured_loaders = [ loader for loader in loaders if loader.is_configured() ]
 
+            if len(configured_loaders) == 0:
+                self.loader = pick_loader(loaders)
+            elif len(configured_loaders) > 0:
+                self.loader = configured_loaders[0]
+            else:
+                raise PyPKI2Exception('No configured PKI loader available.')
+
+            self.loader.configure()
+
+            self.ca_loader = _CALoader(self.config)
+            self.ca_loader.configure()
+
+            self.config.store(self.config_path)
+
+    def new_context(self, protocol=ssl.PROTOCOL_SSLv23):
+        self.prepare_loader()
+        c = self.loader.new_context(protocol=protocol)
+        c.verify_mode = ssl.CERT_REQUIRED
+        ca_filename = self.ca_loader.filename.strip()
+
+        if len(ca_filename) == 0:
+            raise PyPKI2Exception('Certificate Authority (CA) file not specified.')
+        elif not os.path.exists(ca_filename):
+            raise PyPKI2Exception('Certificate Authority (CA) file {0} does not exist.'.format(ca_filename))
+        else:
+            c.load_verify_locations(cafile=ca_filename)
+
+        return c
+
+    def dump_key(self, fobj):
+        self.prepare_loader()
+        self.loader.dump_key(fobj)
+
+    def ca_path(self):
+        self.prepare_loader()
+        return self.ca_loader.filename
