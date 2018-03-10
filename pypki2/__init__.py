@@ -1,7 +1,7 @@
 # vim: expandtab tabstop=4 shiftwidth=4
 
 from .pypki2 import _is_patched, make_new_init, _patch, _unpatch
-from .configuration import Loader
+from .config import Loader
 
 _pypki_loader = Loader()
 _new_init = make_new_init(_pypki_loader)
