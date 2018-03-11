@@ -27,7 +27,7 @@ elif sys.version_info.major == 2:
 else:
     raise Exception('Error getting original HTTPSConnection constructor.  Unexpected Python version {0}'.format(sys.version_info.major))
     
-def make_new_init(loader):
+def make_new_httpsconnection_init(loader):
     def _new_init(self, *args, **kwargs):
         protocol = ssl.PROTOCOL_SSLv23
 

@@ -4,7 +4,7 @@
 
 from tempfile import NamedTemporaryFile
 
-import pypki2
+import pypki2.config
 
 try:
     import pip
@@ -25,9 +25,9 @@ def _new_pip_main(*args, **kwargs):
     new_args = [ arg for arg in new_args if '--cert=' not in arg ]
 
     with NamedTemporaryFile() as temp_key:
-        pypki2.dump_key(temp_key)
+        pypki2.config.dump_key(temp_key)
         new_args.append('--client-cert={0}'.format(temp_key.name))
-        new_args.append('--cert={0}'.format(pypki2.ca_path()))
+        new_args.append('--cert={0}'.format(pypki2.config.ca_path()))
         new_args.append('--disable-pip-version-check')
         _orig_pip_main(new_args)
 

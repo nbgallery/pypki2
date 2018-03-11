@@ -173,3 +173,14 @@ class Loader(object):
     def ca_path(self):
         self.prepare_loader()
         return self.ca_loader.filename
+
+_pypki2_config_loader = Loader()
+
+def dump_key(fobj):
+    _pypki_config_loader.dump_key(fobj)
+
+def ca_path():
+    return _pypki_config_loader.ca_path()
+
+def ssl_context(protocol=ssl.PROTOCOL_SSLv23):
+    return _pypki2_config_loader.new_context(protocol=protocol)
