@@ -2,13 +2,13 @@
 
 pypki2 attempts to make it a bit easier to access PKI-enabled services with Python.  Conceptually, this is very similar to the Ruby MyPKI package, and is intended to use the same ~/.mypki configuration file.
 
-There are two modes where pypki2 can be used: unpatched and patched.
+There are two modes where pypki2 can be used: **unpatched** and **patched**.
 
 ## Unpatched Mode
 Unpatched mode in pypki2 mainly provides convenience functions around the .mypki config.
 
 ### Get an SSLContext
-If you have your own code and you just want to pass along an SSLContext based on the .mypki config (eg. for the `requests` package), then all you have to do is the following:
+If you have your own code and you just want to pass along an SSLContext based on the .mypki config (eg. for `urlopen()`, or for the `requests` package), then all you have to do is the following:
 
 ```python
 import pypki2.config
@@ -30,6 +30,23 @@ All it takes to activate patched mode is the following code:
 ```python
 import pypki2
 ```
+
+You can turn patch mode off with:
+```python
+pypki2.unpatch()
+```
+
+And you can turn patch mode back on again with:
+```python
+pypki2.patch()
+```
+
+You can check if patch mode is enabled with:
+```python
+pypki2.is_patched()
+```
+
+Note that `patch()`, `unpatch()`, and `is_patched()` are not even remotely thread-safe.  If you're doing creative things with threads, it's probably best to use unpatched mode and explicitly pass SSLContext objects.
 
 ### Patched Mode Examples
 
