@@ -52,7 +52,7 @@ def _is_patched(new_init):
             raise Exception('Error: pypki2 is not patched or unpatched')
 
     elif sys.version_info.major == 2:
-        if httplib.HTTPSConnection.__init__ == new_init:
+        if httplib.HTTPSConnection.__init__.__func__ == new_init:
             return True
         elif httplib.HTTPSConnection.__init__ == _orig_HTTPSConnection_init:
             return False
