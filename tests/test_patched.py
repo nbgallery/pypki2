@@ -11,7 +11,7 @@ import sys
 if sys.version_info.major == 3:
     from urllib.request import urlopen
 elif sys.version_info.major == 2:
-    from urrlib2 import urlopen
+    from urllib2 import urlopen
 
 def bin_to_utf8(s):
     if sys.version_info.major == 3:
