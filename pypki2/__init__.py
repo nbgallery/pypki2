@@ -1,9 +1,9 @@
 # vim: expandtab tabstop=4 shiftwidth=4
 
 from .pypki2 import _is_patched, make_new_httpsconnection_init, _patch, _unpatch
-from .config import Loader
+from .config import _pypki2_config_loader
 
-_new_httpsconnection_init = make_new_httpsconnection_init(Loader())
+_new_httpsconnection_init = make_new_httpsconnection_init(_pypki2_config_loader)
 
 def patch():
     _patch(_new_httpsconnection_init)
