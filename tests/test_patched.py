@@ -5,6 +5,7 @@
 from functools import partial
 
 import pypki2
+import pypki2config
 import unittest
 import sys
 
@@ -51,20 +52,20 @@ class PatchTest(unittest.TestCase):
 class UserCertTest(unittest.TestCase):
     def test_good_pem_password(self):
         cert_path = 'tests/ca/user-priv-key.pem'
-        load_func = partial(pypki2.pem._load_pem, cert_path)
+        load_func = partial(pypki2config.pem._load_pem, cert_path)
         if sys.version_info.major == 3:
             input_func = lambda: b'userpass'
-            self.assertEqual(pypki2.utils.confirm_password(input_func, load_func), b'userpass')
+            self.assertEqual(pypki2config.utils.confirm_password(input_func, load_func), b'userpass')
         elif sys.version_info.major == 2:
             input_func = lambda: 'userpass'
-            self.assertEqual(pypki2.utils.confirm_password(input_func, load_func), 'userpass')
+            self.assertEqual(pypki2config.utils.confirm_password(input_func, load_func), 'userpass')
 
     def test_no_pem_password(self):
         cert_path = 'tests/ca/user-priv-key-nopass.pem'
         input_func = lambda: 'userpass'  # this password shouldn't even get used
-        load_func = partial(pypki2.pem._load_pem, cert_path)
+        load_func = partial(pypki2config.pem._load_pem, cert_path)
 
         if sys.version_info.major == 3:
-            self.assertEqual(pypki2.utils.confirm_password(input_func, load_func), b'')
+            self.assertEqual(pypki2config.utils.confirm_password(input_func, load_func), b'')
         elif sys.version_info.major == 2:
-            self.assertEqual(pypki2.utils.confirm_password(input_func, load_func), '')
+            self.assertEqual(pypki2config.utils.confirm_password(input_func, load_func), '')

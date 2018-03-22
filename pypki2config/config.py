@@ -1,6 +1,6 @@
 # vim: expandtab tabstop=4 shiftwidth=4
 
-from .exceptions import PyPKI2Exception
+from .exceptions import PyPKI2ConfigException
 from .p12 import P12Loader
 from .pem import CALoader, PEMLoader
 from .utils import in_ipython, in_nbgallery, input23
@@ -10,7 +10,7 @@ from time import sleep
 try:
     import ssl
 except ImportError:
-    raise PyPKI2Exception('Cannot use pypki2.  This instance of Python was not compiled with SSL support.  Try installing openssl-devel and recompiling.')
+    raise PyPKI2ConfigException('Cannot use pypki2.  This instance of Python was not compiled with SSL support.  Try installing openssl-devel and recompiling.')
 
 import json
 import os
@@ -25,7 +25,7 @@ class Configuration(object):
                 with open(filename, 'r') as f:
                     j = json.load(f)
             except ValueError as e:
-                raise PyPKI2Exception('Unable to parse your .mypki file at {0}.  Is it in JSON format?'.format(filename))
+                raise PyPKI2ConfigException('Unable to parse your .mypki file at {0}.  Is it in JSON format?'.format(filename))
 
             for k,v in j.items():
                 self.config[k] = v
@@ -85,7 +85,7 @@ def get_config_path():
     if p is not None:
         return p
 
-    raise PyPKI2Exception('Could not find MYPKI_CONFIG or HOME environment variables.  If you are on Windows, you need to add a MYPKI_CONFIG environment variable in Control Panel.  See Windows Configuration in README.md for further instructions.')
+    raise PyPKI2ConfigException('Could not find MYPKI_CONFIG or HOME environment variables.  If you are on Windows, you need to add a MYPKI_CONFIG environment variable in Control Panel.  See Windows Configuration in README.md for further instructions.')
 
 def pick_loader(loaders):
     options = { str(i+1):loaders[i] for i in range(len(loaders)) }
@@ -142,7 +142,7 @@ class Loader(object):
             elif len(configured_loaders) > 0:
                 self.loader = configured_loaders[0]
             else:
-                raise PyPKI2Exception('No configured PKI loader available.')
+                raise PyPKI2ConfigException('No configured PKI loader available.')
 
             self.loader.configure()
 
@@ -158,9 +158,9 @@ class Loader(object):
         ca_filename = self.ca_loader.filename.strip()
 
         if len(ca_filename) == 0:
-            raise PyPKI2Exception('Certificate Authority (CA) file not specified.')
+            raise PyPKI2ConfigException('Certificate Authority (CA) file not specified.')
         elif not os.path.exists(ca_filename):
-            raise PyPKI2Exception('Certificate Authority (CA) file {0} does not exist.'.format(ca_filename))
+            raise PyPKI2ConfigException('Certificate Authority (CA) file {0} does not exist.'.format(ca_filename))
         else:
             c.load_verify_locations(cafile=ca_filename)
 
@@ -173,14 +173,3 @@ class Loader(object):
     def ca_path(self):
         self.prepare_loader()
         return self.ca_loader.filename
-
-_pypki2_config_loader = Loader()
-
-def dump_key(fobj):
-    _pypki2_config_loader.dump_key(fobj)
-
-def ca_path():
-    return _pypki2_config_loader.ca_path()
-
-def ssl_context(protocol=ssl.PROTOCOL_SSLv23):
-    return _pypki2_config_loader.new_context(protocol=protocol)

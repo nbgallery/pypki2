@@ -1,6 +1,6 @@
 # vim: expandtab tabstop=4 shiftwidth=4
 
-from .exceptions import PyPKI2Exception
+from .exceptions import PyPKI2ConfigException
 from .pem import _write_pem_with_password, _write_temp_pem
 from .utils import confirm_password, get_cert_path, get_password
 
@@ -12,7 +12,7 @@ import os
 try:
     import ssl
 except ImportError:
-    raise PyPKI2Exception('Cannot use pypki2.  This instance of Python was not compiled with SSL support.  Try installing openssl-devel and recompiling.')
+    raise PyPKI2ConfigException('Cannot use pypki2.  This instance of Python was not compiled with SSL support.  Try installing openssl-devel and recompiling.')
 
 import OpenSSL.crypto
 

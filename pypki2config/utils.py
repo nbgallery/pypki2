@@ -1,6 +1,6 @@
 # vim: expandtab tabstop=4 shiftwidth=4
 
-from .exceptions import PyPKI2Exception
+from .exceptions import PyPKI2ConfigException
 
 from datetime import datetime
 from getpass import getpass
@@ -52,7 +52,7 @@ def blank_password():
     elif sys.version_info.major == 2:
         return ''
     else:
-        raise PyPKI2Exception('Unknown version of Python.')
+        raise PyPKI2ConfigException('Unknown version of Python.')
 
 def confirm_password(input_function, load_function):
     # see if we even need a password before prompting
@@ -79,7 +79,7 @@ def get_password(filename):
     elif sys.version_info.major == 2:
         return getpass('PKI password for {0}: '.format(filename))
     else:
-        raise PyPKI2Exception('Unknown version of Python.')
+        raise PyPKI2ConfigException('Unknown version of Python.')
 
 def get_cert_path(prompt):
     path = None

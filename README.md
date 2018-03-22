@@ -4,23 +4,23 @@ pypki2 attempts to make it a bit easier to access PKI-enabled services with Pyth
 
 There are two modes where pypki2 can be used: **unpatched** and **patched**.
 
-## Unpatched Mode
+## Unpatched Mode (Config Mode)
 Unpatched mode in pypki2 mainly provides convenience functions around the .mypki config.
 
 ### Get an SSLContext
 If you have your own code and you just want to pass along an SSLContext based on the .mypki config (eg. for `urlopen()`, or for the `requests` package), then all you have to do is the following:
 
 ```python
-import pypki2.config
-ctx = pypki2.config.ssl_context()
+import pypki2config
+ctx = pypki2config.ssl_context()
 ```
 
 You can override the protocol with the following.  The default is `PROTOCOL_SSLv23`.
 
 ```python
-import pypki2.config
+import pypki2config
 import ssl
-ctx = pypki2.config.ssl_context(protocol=ssl.PROTOCOL_SSLv3)  # SSLv3 not recommended
+ctx = pypki2config.ssl_context(protocol=ssl.PROTOCOL_SSLv3)  # SSLv3 not recommended
 ```
 
 ## Patched Mode
@@ -187,7 +187,7 @@ This package also provides a wrapper for pip's ```main()``` function, which can 
 
 ```python
 import pip
-import pypki2.pipwrapper
+import pypki2config.pipwrapper
 
 index_url = 'https://your.pki.enabled.pip.server/simple/'
 extra_index_url = 'http://pypi.python.org/pypi/'
