@@ -10,7 +10,7 @@ setup(
     author="Bill Allen",
     author_email="photo.allen@gmail.com",
     scripts=[],
-    packages=['pypki2','pypki2config'],
+    packages=['pypki2', 'pypki2config', 'pypki2pip'],
     package_data={},
     python_requires='>=2.7.9, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
     install_requires=['pyOpenSSL'],

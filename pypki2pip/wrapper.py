@@ -2,19 +2,17 @@
 
 # vim: expandtab tabstop=4 shiftwidth=4
 
-from .config import ca_path, dump_key
-from .exceptions import PyPKI2ConfigException
+from .exceptions import PyPKI2PipException
 
+from pypki2config import ca_path, dump_key
 from tempfile import NamedTemporaryFile
 
 try:
-    import pip
+    import pip as _pip
 except ImportError:
-    raise PyPKI2ConfigException('Unable to import pip.  Cannot start pipwrapper.')
+    raise PyPKI2PipException('Unable to import pip.  Cannot start pipwrapper.')
 
-_orig_pip_main = pip.main
-
-def _new_pip_main(*args, **kwargs):
+def pip(*args, **kwargs):
     new_args = []
 
     if 'args' in kwargs:
@@ -30,6 +28,4 @@ def _new_pip_main(*args, **kwargs):
         new_args.append('--client-cert={0}'.format(temp_key.name))
         new_args.append('--cert={0}'.format(ca_path()))
         new_args.append('--disable-pip-version-check')
-        _orig_pip_main(new_args)
-
-pip.main = _new_pip_main
+        _pip.main(new_args)
