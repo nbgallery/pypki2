@@ -14,5 +14,5 @@ setup(
     package_data={},
     python_requires='>=2.7.9, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
     install_requires=['pyOpenSSL'],
-    keywords=['pki','ssl','pem','pkcs12','p12','mypki']
+    keywords=['pki','ssl','pem','pkcs12','p12','mypki','pip']
 )

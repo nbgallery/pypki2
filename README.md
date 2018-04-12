@@ -13,6 +13,8 @@ If you have your own code and you just want to pass along an SSLContext based on
 ```python
 import pypki2config
 ctx = pypki2config.ssl_context()
+resp = urlopen(https_url, context=ctx)
+...
 ```
 
 You can override the protocol with the following.  The default is `PROTOCOL_SSLv23`.
@@ -21,6 +23,7 @@ You can override the protocol with the following.  The default is `PROTOCOL_SSLv
 import pypki2config
 import ssl
 ctx = pypki2config.ssl_context(protocol=ssl.PROTOCOL_SSLv3)  # SSLv3 not recommended
+...
 ```
 
 ## Patched Mode
@@ -187,14 +190,14 @@ This package also provides a wrapper for pip's ```main()``` function, which can 
 
 ```python
 import pip
-import pypki2config.pipwrapper
+import pypki2pip
 
 index_url = 'https://your.pki.enabled.pip.server/simple/'
 extra_index_url = 'http://pypi.python.org/pypi/'
 trusted_host = 'pypi.python.org'
 package_name = 'awesomepackage'
 
-pip.main([
+pypki2pip.pip([
     'install',
     '-vvv',
     '--index-url={0}'.format(index_url),
@@ -209,7 +212,7 @@ pip.main([
 ])
 ```
 
-Pypki2 will automatically fill in the ```--client-cert=``` and ```--cert=``` parameters with info from your .mypki file.  You'll only have to enter your PKI password once; normally pip requires you do enter your password multiple times as it steps through the installation transactions with the server.
+Pypki2pip will automatically fill in the ```--client-cert=``` and ```--cert=``` parameters with info from your .mypki file.  You'll only have to enter your PKI password once; normally pip requires you do enter your password multiple times as it steps through the installation transactions with the server.
 
 ## Windows Configuration
 Since Windows does not define a standard HOME environment variable, you must set the MYPKI_CONFIG environment variable in Control Panel yourself.  It needs to define a location where pypki2 can store a configuration file.  For example, many corporate environments have a network drive for each user, such as H:\ or M:\johndoe\private.  Just set MYPKI_CONFIG to the path for your particular environment.  You can find the environment variable dialog box by searching for 'environment' in the Control Panel window.
