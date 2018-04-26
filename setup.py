@@ -3,7 +3,7 @@ from setuptools import setup
 # vim: expandtab tabstop=4 shiftwidth=4
 
 setup(
-    version='0.10.0',
+    version='0.10.1',
     name='pypki2',
     description='More user-friendly way to access PKI-enabled services',
     url='https://github.com/nbgallery/pypki2',

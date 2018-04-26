@@ -12,6 +12,19 @@ try:
 except ImportError:
     raise PyPKI2PipException('Unable to import pip.  Cannot start pipwrapper.')
 
+def pip_pki_exec(executor, args):
+    new_args = []
+    executor_returned = None
+
+    with NamedTemporaryFile() as temp_key:
+        dump_key(temp_key)
+        new_args.append('--client-cert={0}'.format(temp_key.name))
+        new_args.append('--cert={0}'.format(ca_path()))
+        new_args.append('--disable-pip-version-check')
+        executor_returned = executor(args+new_args)
+
+    return executor_returned
+
 def pip(*args, **kwargs):
     new_args = []
 
