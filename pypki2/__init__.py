@@ -5,6 +5,7 @@ from .pypki2 import _is_patched, make_new_httpsconnection_init, _patch, _unpatch
 from pypki2config import configured_loader
 
 _new_httpsconnection_init = make_new_httpsconnection_init(configured_loader)
+_pypki_loader = configured_loader  # added for backwards compatibility (issue 22)
 
 def patch():
     _patch(_new_httpsconnection_init)
