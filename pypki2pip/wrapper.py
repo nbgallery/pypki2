@@ -36,9 +36,18 @@ def pip(*args, **kwargs):
     new_args = [ arg for arg in new_args if '--client-cert=' not in arg ]
     new_args = [ arg for arg in new_args if '--cert=' not in arg ]
 
-    with NamedTemporaryFile() as temp_key:
-        dump_key(temp_key)
-        new_args.append('--client-cert={0}'.format(temp_key.name))
-        new_args.append('--cert={0}'.format(ca_path()))
-        new_args.append('--disable-pip-version-check')
-        _pip.main(new_args)
+	#create the temp key and dump cert and key to it
+	temp_key = NamedTemporaryFile(delete=False)
+	demp_key(temp_key)
+	temp_key.close()	
+	
+	#use file in args
+	new_args.append('--client-cert={0}'.format(temp_key.name))
+	new_args.append('--cert={0}'.format(ca_path()))
+	new_args.append('--disable-pip-version-check')
+		
+	#run pip
+	_pip.main(new_args)
+
+	#ensure temp file is closed
+	os.unlink(temp_key)
