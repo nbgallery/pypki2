@@ -61,8 +61,13 @@ class P12Loader(object):
         f = NamedTemporaryFile(delete=False)
         _write_pem_with_password(p12, f, self.password)
         f.close()
-        c.load_cert_chain(f.name, password=self.password)
-        os.unlink(f.name)
+
+        try:
+            c.load_cert_chain(f.name, password=self.password)
+        finally:
+            # ensure temp file is always deleted
+            os.unlink(f.name)
+
         return c
 
     def dump_key(self, file_obj):
