@@ -4,28 +4,36 @@
 
 from .exceptions import PyPKI2PipException
 
+from os import unlink
 from pypki2config import ca_path, dump_key
 from tempfile import NamedTemporaryFile
-
-try:
-    import pip as _pip
-except ImportError:
-    raise PyPKI2PipException('Unable to import pip.  Cannot start pipwrapper.')
 
 def pip_pki_exec(executor):
     args = []
     executor_returned = None
 
-    with NamedTemporaryFile() as temp_key:
-        dump_key(temp_key)
-        args.append('--client-cert={0}'.format(temp_key.name))
-        args.append('--cert={0}'.format(ca_path()))
-        args.append('--disable-pip-version-check')
+    temp_key = NamedTemporaryFile(delete=False)
+    dump_key(temp_key)
+    temp_key.close()
+
+    args.append('--client-cert={0}'.format(temp_key.name))
+    args.append('--cert={0}'.format(ca_path()))
+    args.append('--disable-pip-version-check')
+
+    try:
         executor_returned = executor(args)
+    finally:
+    	#ensure temp file is always deleted
+        unlink(temp_key.name)
 
     return executor_returned
 
 def pip(*args, **kwargs):
+    try:
+        import pip as _pip
+    except ImportError:
+        raise PyPKI2PipException('Unable to import pip.  Cannot start pipwrapper.')
+
     new_args = []
 
     if 'args' in kwargs:
@@ -46,8 +54,8 @@ def pip(*args, **kwargs):
 	new_args.append('--cert={0}'.format(ca_path()))
 	new_args.append('--disable-pip-version-check')
 		
-	#run pip
-	_pip.main(new_args)
-
-	#ensure temp file is closed
-	os.unlink(temp_key)
+    try:
+    	_pip.main(new_args)
+    finally:
+    	#ensure temp file is always deleted
+    	unlink(temp_key.name)
