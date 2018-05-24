@@ -23,7 +23,7 @@ def pip_pki_exec(executor):
     try:
         executor_returned = executor(args)
     finally:
-    	#ensure temp file is always deleted
+        #ensure temp file is always deleted
         unlink(temp_key.name)
 
     return executor_returned
@@ -44,18 +44,18 @@ def pip(*args, **kwargs):
     new_args = [ arg for arg in new_args if '--client-cert=' not in arg ]
     new_args = [ arg for arg in new_args if '--cert=' not in arg ]
 
-	#create the temp key and dump cert and key to it
-	temp_key = NamedTemporaryFile(delete=False)
-	demp_key(temp_key)
-	temp_key.close()	
-	
-	#use file in args
-	new_args.append('--client-cert={0}'.format(temp_key.name))
-	new_args.append('--cert={0}'.format(ca_path()))
-	new_args.append('--disable-pip-version-check')
-		
+    #create the temp key and dump cert and key to it
+    temp_key = NamedTemporaryFile(delete=False)
+    dump_key(temp_key)
+    temp_key.close()    
+    
+    #use file in args
+    new_args.append('--client-cert={0}'.format(temp_key.name))
+    new_args.append('--cert={0}'.format(ca_path()))
+    new_args.append('--disable-pip-version-check')
+        
     try:
-    	_pip.main(new_args)
+        _pip.main(new_args)
     finally:
-    	#ensure temp file is always deleted
-    	unlink(temp_key.name)
+        #ensure temp file is always deleted
+        unlink(temp_key.name)
