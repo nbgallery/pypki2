@@ -2,7 +2,7 @@
 
 pypki2 attempts to make it a bit easier to access PKI-enabled services with Python.  Conceptually, this is very similar to the Ruby MyPKI package, and is intended to use the same ~/.mypki configuration file.
 
-There are two modes where pypki2 can be used: **unpatched** and **patched**.
+There are two modes where pypki2 can be used: **unpatched** and **patched**.  We recommend unpatched mode, as it causes fewer side-effects that can cause breakages in other code that uses httplib.
 
 ## Unpatched Mode (Config Mode)
 Unpatched mode in pypki2 mainly provides convenience functions around the .mypki config.
@@ -11,13 +11,24 @@ Unpatched mode in pypki2 mainly provides convenience functions around the .mypki
 If you have your own code and you just want to pass along an SSLContext based on the .mypki config (eg. for `urlopen()`, or for the `requests` package), then all you have to do is the following:
 
 ```python
+from urllib.request import urlopen
 import pypki2config
 ctx = pypki2config.ssl_context()
 resp = urlopen(https_url, context=ctx)
 ...
 ```
 
-You can override the protocol with the following.  The default is `PROTOCOL_SSLv23`.
+If you have already configured your PKI info, you have the option of providing a certificate password to `ssl_context()` rather than using the interactive prompt.  This can be useful when the password is stored in a vault, or when the code needs to run in some non-interactive way.  Please be conscientious on the security implications of putting your password directly in your code though.
+
+```python
+from urllib.request import urlopen
+import pypki2config
+ctx = pypki2config.ssl_context(password='supersecret')
+resp = urlopen(https_url, context=ctx)
+...
+```
+
+If you need to send requests to an out-of-date server, you can override the protocol with the following.  The default is `PROTOCOL_SSLv23`.
 
 ```python
 import pypki2config
