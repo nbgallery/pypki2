@@ -18,7 +18,7 @@ resp = urlopen(https_url, context=ctx)
 ...
 ```
 
-If you have already configured your PKI info, you have the option of providing a certificate password to `ssl_context()` rather than using the interactive prompt.  This can be useful when the password is stored in a vault, or when the code needs to run in some non-interactive way.  Please be conscientious on the security implications of putting your password directly in your code though.
+If you have already configured your PKI info, you have the option of providing a certificate password to `ssl_context()` rather than using the interactive prompt.  This can be useful when the password is stored in a vault, or when the code needs to run in some non-interactive way.  Please be conscientious of the security implications of putting your password directly in your code though.
 
 ```python
 from urllib.request import urlopen
