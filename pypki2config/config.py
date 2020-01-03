@@ -131,7 +131,7 @@ class Loader(object):
                     else:
                         sleep(2)
 
-    def prepare_loader(self):
+    def prepare_loader(self, password=None):
         if self.loader is None:
             self.config = Configuration(self.config_path)
             loaders = [ P12Loader(self.config), PEMLoader(self.config) ]
@@ -144,15 +144,15 @@ class Loader(object):
             else:
                 raise PyPKI2ConfigException('No configured PKI loader available.')
 
-            self.loader.configure()
+            self.loader.configure(password=password)
 
             self.ca_loader = CALoader(self.config)
             self.ca_loader.configure()
 
             self.config.store(self.config_path)
 
-    def new_context(self, protocol=ssl.PROTOCOL_SSLv23):
-        self.prepare_loader()
+    def new_context(self, protocol=ssl.PROTOCOL_SSLv23, password=None):
+        self.prepare_loader(password=password)
         c = self.loader.new_context(protocol=protocol)
         c.verify_mode = ssl.CERT_REQUIRED
         ca_filename = self.ca_loader.filename.strip()

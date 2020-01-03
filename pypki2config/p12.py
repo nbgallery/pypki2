@@ -2,7 +2,7 @@
 
 from .exceptions import PyPKI2ConfigException
 from .pem import _write_pem_with_password, _write_temp_pem
-from .utils import confirm_password, get_cert_path, get_password
+from .utils import confirm_password, get_cert_path, get_password, return_password
 
 from functools import partial
 from tempfile import NamedTemporaryFile
@@ -36,22 +36,32 @@ class P12Loader(object):
 
         return False
 
-    def configure(self):
+    def configure(self, password=None):
         if self.is_configured():
             self.filename = self.config.get('p12')['path']
-
-            input_func = partial(get_password, self.filename)
             load_func = partial(_load_p12, self.filename)
-            self.password = confirm_password(input_func, load_func)
+
+            if password is not None:
+                input_func = partial(return_password, password)
+                self.password = confirm_password(input_func, load_func, attempts_allowed=1)
+            else:
+                input_func = partial(get_password, self.filename)
+                self.password = confirm_password(input_func, load_func)
+
             self.ready = True
 
         # no .p12 info in .mypki
         else:
             self.filename = get_cert_path('Path to your .p12 digital signature (DS) file: ')
-
-            input_func = partial(get_password, self.filename)
             load_func = partial(_load_p12, self.filename)
-            self.password = confirm_password(input_func, load_func)
+
+            if password is not None:
+                input_func = partial(return_password, password)
+                self.password = confirm_password(input_func, load_func, attempts_allowed=1)
+            else:
+                input_func = partial(get_password, self.filename)
+                self.password = confirm_password(input_func, load_func)
+
             self.config.set('p12', { 'path': self.filename })
             self.ready = True
 

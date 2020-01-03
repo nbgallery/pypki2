@@ -1,7 +1,7 @@
 # vim: expandtab tabstop=4 shiftwidth=4
 
 from .exceptions import PyPKI2ConfigException
-from .utils import confirm_password, get_cert_path, get_password, make_date_str
+from .utils import confirm_password, get_cert_path, get_password, make_date_str, return_password
 
 from functools import partial
 
@@ -80,22 +80,32 @@ class PEMLoader(object):
 
         return False
 
-    def configure(self):
+    def configure(self, password=None):
         if self.is_configured():
             self.filename = self._combine_pem_files(self.config.get('pem'))
-
-            input_func = partial(get_password, self.filename)
             load_func = partial(_load_pem, self.filename)
-            self.password = confirm_password(input_func, load_func)
+
+            if password is not None:
+                input_func = partial(return_password, password)
+                self.password = confirm_password(input_func, load_func, attempts_allowed=1)
+            else:
+                input_func = partial(get_password, self.filename)
+                self.password = confirm_password(input_func, load_func)
+
             self.ready = True
 
         # no .pem info in .mypki
         else:
             self.filename = self._combine_pem_files(self._get_pem_paths())
-
-            input_func = partial(get_password, self.filename)
             load_func = partial(_load_pem, self.filename)
-            self.password = confirm_password(input_func, load_func)
+
+            if password is not None:
+                input_func = partial(return_password, password)
+                self.password = confirm_password(input_func, load_func, attempts_allowed=1)
+            else:
+                input_func = partial(get_password, self.filename)
+                self.password = confirm_password(input_func, load_func)
+
             self.config.set('pem', { 'path': self.filename })
             self.ready = True
 

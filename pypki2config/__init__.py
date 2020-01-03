@@ -1,6 +1,7 @@
 # vim: expandtab tabstop=4 shiftwidth=4
 
 from .config import Loader
+from .exceptions import PyPKI2ConfigException
 
 try:
     import ssl
@@ -15,5 +16,5 @@ def dump_key(fobj):
 def ca_path():
     return configured_loader.ca_path()
 
-def ssl_context(protocol=ssl.PROTOCOL_SSLv23):
-    return configured_loader.new_context(protocol=protocol)
+def ssl_context(protocol=ssl.PROTOCOL_SSLv23, password=None):
+    return configured_loader.new_context(protocol=protocol, password=password)

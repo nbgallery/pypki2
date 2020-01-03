@@ -54,7 +54,9 @@ def blank_password():
     else:
         raise PyPKI2ConfigException('Unknown version of Python.')
 
-def confirm_password(input_function, load_function):
+def confirm_password(input_function, load_function, attempts_allowed=0):
+    attempt_count = 0
+
     # see if we even need a password before prompting
     password = blank_password()
 
@@ -62,7 +64,11 @@ def confirm_password(input_function, load_function):
         return password
 
     while True:
+        if attempts_allowed > 0 and attempt_count >= attempts_allowed:
+            raise PyPKI2ConfigException('Could not confirm password after {0} attempts'.format(attempt_count))
+
         password = input_function()
+        attempt_count += 1
 
         if password_is_good(load_function, password):
             print('Successfully loaded private key.')
@@ -72,6 +78,14 @@ def confirm_password(input_function, load_function):
             continue
 
     return password
+
+def return_password(password):
+    if sys.version_info.major == 3:
+        return bytes(password, encoding='utf-8')
+    elif sys.version_info.major == 2:
+        return password
+    else:
+        raise PyPKI2ConfigException('Unknown version of Python.')
 
 def get_password(filename):
     if sys.version_info.major == 3:
