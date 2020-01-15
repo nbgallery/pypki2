@@ -4,6 +4,7 @@ from .exceptions import PyPKI2ConfigException
 from .utils import confirm_password, get_cert_path, get_password, make_date_str, return_password
 
 from functools import partial
+from tempfile import NamedTemporaryFile
 
 import os
 import sys
@@ -22,6 +23,11 @@ def _write_temp_pem(pkey, file_obj):
     _write_pem(pkey, file_obj)
 
 def _write_pem(pkey, file_obj, password=None):
+    # pkey might be a OpenSSL.crypto.PKCS12 instance
+    # or it might be a generic OpenSSL.crypto.PKey instance.
+    # Methods like dump_privatekey() are only available for
+    # PKCS12.
+
     if password is not None:
         pem_key_data = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, pkey.get_privatekey(), 'blowfish', password)
     else:
@@ -74,8 +80,9 @@ class PEMLoader(object):
         self.ready = False
 
     def is_configured(self):
-        # .pem info in .mypki
-        if self.config.has('pem') and 'path' in self.config.get('pem'):
+        # .pem key and CA info in .mypki
+        if self.config.has('pem') and 'path' in self.config.get('pem') and os.path.exists(self.config.get('pem')['path']) \
+            and self.config.has('ca') and os.path.exists(self.config.get('ca')):
             return True
 
         return False
@@ -110,8 +117,22 @@ class PEMLoader(object):
             self.ready = True
 
     def new_context(self, protocol=ssl.PROTOCOL_SSLv23):
+        # We don't want to go straight to SSLContext.load_cert_chain()
+        # because it's too helpful.  If self.password is wrong, it will
+        # prompt the user for another password and mess up our
+        # control flow.
+        pem = _load_pem(self.filename, self.password)
         c = ssl.SSLContext(protocol)
-        c.load_cert_chain(self.filename, password=self.password)
+        f = NamedTemporaryFile(delete=False)
+        _write_pem_with_password(pem, f, self.password)
+        f.close()
+
+        try:
+            c.load_cert_chain(f.name, password=self.password)
+        finally:
+            # ensure temp file is always deleted
+            os.unlink(f.name)
+
         return c
 
     def dump_key(self, file_obj):

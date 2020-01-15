@@ -132,8 +132,14 @@ class Loader(object):
                         sleep(2)
 
     def prepare_loader(self, password=None):
-        if self.loader is None:
+        if self.config is None:
             self.config = Configuration(self.config_path)
+
+        if self.ca_loader is None:
+            self.ca_loader = CALoader(self.config)
+            self.ca_loader.configure()
+
+        if self.loader is None:
             loaders = [ P12Loader(self.config), PEMLoader(self.config) ]
             configured_loaders = [ loader for loader in loaders if loader.is_configured() ]
 
@@ -146,10 +152,7 @@ class Loader(object):
 
             self.loader.configure(password=password)
 
-            self.ca_loader = CALoader(self.config)
-            self.ca_loader.configure()
-
-            self.config.store(self.config_path)
+        self.config.store(self.config_path)
 
     def new_context(self, protocol=ssl.PROTOCOL_SSLv23, password=None):
         self.prepare_loader(password=password)
