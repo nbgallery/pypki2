@@ -16,9 +16,17 @@ except ImportError:
 
 import OpenSSL.crypto
 
-def _load_p12(filename, password):
+def _raise_if_expired(p12):
+    if p12.get_certificate().has_expired():
+        raise PyPKI2ConfigException('PKI certificate has expired')
+
+def _load_p12(filename, allow_expired, password):
     with open(filename, 'rb') as f:
         p12 = OpenSSL.crypto.load_pkcs12(f.read(), password)
+
+    if not allow_expired:
+        _raise_if_expired(p12)
+
     return p12
 
 class P12Loader(object):
@@ -36,10 +44,10 @@ class P12Loader(object):
 
         return False
 
-    def configure(self, password=None):
+    def configure(self, password=None, allow_expired=False):
         if self.is_configured():
             self.filename = self.config.get('p12')['path']
-            load_func = partial(_load_p12, self.filename)
+            load_func = partial(_load_p12, self.filename, allow_expired)
 
             if password is not None:
                 input_func = partial(return_password, password)
@@ -53,7 +61,7 @@ class P12Loader(object):
         # no .p12 info in .mypki
         else:
             self.filename = get_cert_path('Path to your .p12 digital signature (DS) file: ')
-            load_func = partial(_load_p12, self.filename)
+            load_func = partial(_load_p12, self.filename, allow_expired)
 
             if password is not None:
                 input_func = partial(return_password, password)
@@ -65,21 +73,21 @@ class P12Loader(object):
             self.config.set('p12', { 'path': self.filename })
             self.ready = True
 
-    def new_context(self, protocol=ssl.PROTOCOL_SSLv23):
-        p12 = _load_p12(self.filename, self.password)
-        c = ssl.SSLContext(protocol)
-        f = NamedTemporaryFile(delete=False)
-        _write_pem_with_password(p12, f, self.password)
-        f.close()
+    def new_context(self, protocol=ssl.PROTOCOL_SSLv23, allow_expired=False):
+        p12 = _load_p12(self.filename, allow_expired, self.password)
+        ssl_context = ssl.SSLContext(protocol)
+        temp_file = NamedTemporaryFile(delete=False)
+        _write_pem_with_password(p12, temp_file, self.password)
+        temp_file.close()
 
         try:
-            c.load_cert_chain(f.name, password=self.password)
+            ssl_context.load_cert_chain(temp_file.name, password=self.password)
         finally:
             # ensure temp file is always deleted
-            os.unlink(f.name)
+            os.unlink(temp_file.name)
 
-        return c
+        return ssl_context
 
-    def dump_key(self, file_obj):
-        p12 = _load_p12(self.filename, self.password)
+    def dump_key(self, file_obj, allow_expired=False):
+        p12 = _load_p12(self.filename, allow_expired, self.password)
         _write_temp_pem(p12, file_obj)

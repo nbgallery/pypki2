@@ -60,9 +60,19 @@ class CALoader(object):
 
         self.ready = True
 
-def _load_pem(filename, password):
+def _raise_if_expired(cert):
+    if cert.has_expired():
+        raise PyPKI2ConfigException('Certificate has expired')
+
+def _load_pem(filename, allow_expired, password):
     with open(filename, 'rb') as f:
-        pem = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, f.read(), password)
+        file_data = f.read()
+        pem = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, file_data, password)
+
+    if not allow_expired:
+        cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, file_data)
+        _raise_if_expired(cert)
+
     return pem
 
 class PEMLoader(object):
@@ -80,10 +90,10 @@ class PEMLoader(object):
 
         return False
 
-    def configure(self, password=None):
+    def configure(self, password=None, allow_expired=False):
         if self.is_configured():
             self.filename = self._combine_pem_files(self.config.get('pem'))
-            load_func = partial(_load_pem, self.filename)
+            load_func = partial(_load_pem, self.filename, allow_expired)
 
             if password is not None:
                 input_func = partial(return_password, password)
@@ -97,7 +107,7 @@ class PEMLoader(object):
         # no .pem info in .mypki
         else:
             self.filename = self._combine_pem_files(self._get_pem_paths())
-            load_func = partial(_load_pem, self.filename)
+            load_func = partial(_load_pem, self.filename, allow_expired)
 
             if password is not None:
                 input_func = partial(return_password, password)
@@ -109,13 +119,14 @@ class PEMLoader(object):
             self.config.set('pem', { 'path': self.filename })
             self.ready = True
 
-    def new_context(self, protocol=ssl.PROTOCOL_SSLv23):
-        c = ssl.SSLContext(protocol)
-        c.load_cert_chain(self.filename, password=self.password)
-        return c
+    def new_context(self, protocol=ssl.PROTOCOL_SSLv23, allow_expired=False):
+        _load_pem(self.filename, allow_expired, self.password) # only here to check if expired
+        ssl_context = ssl.SSLContext(protocol)
+        ssl_context.load_cert_chain(self.filename, password=self.password)
+        return ssl_context
 
-    def dump_key(self, file_obj):
-        pem = _load_pem(self.filename, self.password)
+    def dump_key(self, file_obj, allow_expired=False):
+        pem = _load_pem(self.filename, allow_expired, self.password)
         _write_temp_pem(pem, file_obj)
 
     def _combine_pem_files(self, path_info):
